@@ -208,9 +208,9 @@ class AMS(object):
         def parse_downloaded():
             return data.parse_downloaded_file(downloaded_file)
 
+        # [1] = "Arbetssökande antal/andel av den registerbaserade arbetskraften"
         # [2] = "Arbetssökande antal/andel av befolkningen"
-        # [3] = "Arbetssökande antal/andel av den registerbaserade arbetskraften"
-        xpath = "(//td[contains(text(),'Exportera till Excel')])[3]"
+        xpath = "(//td[contains(text(),'Exportera till Excel')])[1]"
         downloaded_file = self._download_file(xpath)
         data = patiently(parse_downloaded, IndexError)
         data.verify(year=year, month=month, youth_only=youth_only, foreign_only=foreign_only)

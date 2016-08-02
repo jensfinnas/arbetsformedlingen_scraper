@@ -8,10 +8,10 @@ from datetime import datetime, timedelta
 
 cmd_args = [
     {
-        'short': "-o", "long": "--output",
-        'dest': "output",
+        'short': "-d", "long": "--dest",
+        'dest': "folder",
         'type': str,
-        'help': """path to output file (csv) if you want to store results""",
+        'help': """path to output folder if you want to store results""",
         'required': False
     },
     {
@@ -46,6 +46,13 @@ if ui.args.slow:
 else:
     sleep = 1.5
 
+if not ui.args.folder:
+    folder = ""
+else:
+    folder = ui.args.folder
+    if folder[-1] is not "/":
+        folder += "/"
+
 scraper = AMS(sleep=sleep)
 
 date_start = datetime.strptime(ui.args.date_start, "%Y-%m-%d")
@@ -55,25 +62,31 @@ else:
     date_end = datetime.now()
 
 
-#data = scraper.get_overview(month=4,year=2016)
-#data = OverviewTable().parse_downloaded_file("tmp/Manadsstatistik_ArbetssokandeBefolkning_4TK9XC05T43FI4G.csv")
-#data.save_as("data/overview-2016-04.csv")
-
-files = []
-
 for dt in rrule.rrule(rrule.MONTHLY, dtstart=date_start, until=date_end):
-    file_name = "tmp/raw-%s-%02d.csv" % (dt.year, dt.month)
+    file_base = folder + "ams-%s-%02d" % (dt.year, dt.month)
 
+    # Get all
+    file_name = file_base + "-all.csv"
     if file_exists(file_name):
         print "%s already exists" % file_name
     else: 
         data = scraper.get_overview(year=dt.year, month=dt.month)
-        data += scraper.get_overview(year=dt.year, month=dt.month, youth_only=True)
-        data += scraper.get_overview(year=dt.year, month=dt.month, foreign_only=True)
-        data += scraper.get_overview(year=dt.year, month=dt.month, foreign_only=True, youth_only=True)
+        data.save_as(file_name)
+    
+    # Get foreign born
+    file_name = file_base + "-foreignborn.csv"
+    if file_exists(file_name):
+        print "%s already exists" % file_name
+    else: 
+        data = scraper.get_overview(year=dt.year, month=dt.month, foreign_only=True)
         data.save_as(file_name)
 
-    files.append(file_name)
+    # Get youth
+    file_name = file_base + "-youth.csv"
+    if file_exists(file_name):
+        print "%s already exists" % file_name
+    else: 
+        data = scraper.get_overview(year=dt.year, month=dt.month, youth_only=True)
+        data.save_as(file_name)
 
-if ui.args.output:
-    merge_csv_files(files).save_as(ui.args.output)
+scraper.driver.close()

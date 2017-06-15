@@ -4,7 +4,7 @@ import csvkit as csv
 import codecs
 from itertools import islice
 from errors import DataValidationError, EmptyFileError
-import pdb
+from StringIO import StringIO
 
 class DictList(list):
     def save_as(self, file_name):
@@ -14,7 +14,7 @@ class DictList(list):
             dict_writer = csv.DictWriter(output_file, headers)
             dict_writer.writeheader()
             dict_writer.writerows(self)
-  
+
     def _csv_lines_to_dict_list(self, csv_lines, delimiter=";", headers=[]):
         first = True
         data = []
@@ -56,22 +56,39 @@ class OverviewTable(DictList):
     def parse_downloaded_file(self, file_path):
         print "Parse %s" % file_path
         with open(file_path,'rb') as f:
-            all_rows = list(csv.reader(f, delimiter=";"))
+            content = f.read().replace("\r\n","\n").replace("\xef\xbb\xbf","")
+            all_rows = list(csv.reader(StringIO(content), delimiter=";"))
             if len(all_rows) == 0:
                 print "%s is empty." % file_path
                 raise EmptyFileError("In file {}".format(file_path))
 
-            param_rows = all_rows[-5:]
+            title_row = all_rows[2]
+            title = title_row[1]
+
+
+            param_rows = [x for x in all_rows[-6:] if len(x) > 1]
             param_headers = [x[0].replace(":","").strip() for x in param_rows]
             param_values = [x[1].strip() for x in param_rows]
 
-            data_rows = all_rows[6:-7]
+            data_rows = all_rows[3:-7]
             data_headers = [x.replace("\n","") for x in data_rows[0]]
             data_headers[0] = "Region"
             headers = param_headers + data_headers
             for row in data_rows[1:]:
                 values = param_values + row
-                self.append(dict(zip(headers, values)))
+                datapoint = dict(zip(headers, values))
+                # AMS changed their format slightly in 2017-05
+                # This is a hack to get the old "Utrikesfödda"
+                # in the same way as before
+                # Current format seems faulty.
+                if u"Utrikesfödda" not in datapoint.keys():
+                    if u"utrikesfödda" in title:
+                        datapoint[u"Utrikesfödda"] = "Ja"
+                    else:
+                        datapoint[u"Utrikesfödda"] = ""
+
+                self.append(datapoint)
+
 
             return self
 
@@ -95,6 +112,8 @@ class OverviewTable(DictList):
         # Validate foreign_only column
         if foreign_only:
             for row in self:
+                if u"Utrikesfödda" not in row:
+                    import pdb;pdb.set_trace()
                 if row[u"Utrikesfödda"] != u"Ja":
                     raise DataValidationError(u"Column 'Utrikesfödda' should be 'Ja', but is '{}'".format(row[u"Utrikesfödda"]) )
 

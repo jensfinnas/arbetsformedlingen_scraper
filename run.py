@@ -31,8 +31,9 @@ cmd_args = [
     {
         'short': "-s", "long": "--slow",
         'dest': "slow",
-        'type': str,
         'help': """use the --slow flag if connection is slow, adds extra sleep time""",
+        'default': False,
+        'action': 'store_true',
         'required': False
     },
 

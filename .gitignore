@@ -1,3 +1,5 @@
 tmp
 data
 *.pyc
+.cache
+geckodriver.log

@@ -88,6 +88,7 @@ class AMS(object):
             xpath = "//div[contains(@title,'Månad')]"
             month_list = self.driver.find_elements_by_xpath_patiently(xpath)[1]
             month_list.click()
+            sleep(self.sleep)
             return month_list
 
         #def select_year_month():

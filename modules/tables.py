@@ -84,7 +84,6 @@ class OverviewTable(DictList):
         for row in self:
             year_month = "%s-%02d" % (year, month)
             if row[u"Månad"] != year_month:
-                pdb.set_trace()
                 raise DataValidationError(u"Column 'Månad' should be '{}', but is '{}'".format(year_month, row[u"Månad"]) )
 
         # Validate youth_only column

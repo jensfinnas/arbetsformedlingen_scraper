@@ -13,7 +13,7 @@ import pdb
 class AMS(object):
     def __init__(self, sleep=1.5):
         """ sleep (float): add extra sleep if connection is slow
-        """ 
+        """
         self.download_dir = os.path.join(os.getcwd(), "tmp")
         self.save_dir = os.path.join(os.getcwd(), "data")
         self.sleep = sleep
@@ -22,7 +22,7 @@ class AMS(object):
 
 
     def _init_driver(self):
-        
+
         if not os.path.exists(self.download_dir):
             os.makedirs(self.download_dir)
 
@@ -71,7 +71,7 @@ class AMS(object):
         def select_municpality():
             muni_list.send_keys(municipality)
 
-        def click_municpality():       
+        def click_municpality():
             elem = self.driver.find_element_by_xpath_patiently("//div[@title='%s']/../.." % municipality)
             elem.click()
 
@@ -83,7 +83,7 @@ class AMS(object):
     def _select_year_month(self, year, month):
         year_month = "%s-%02d" % (year, month)
         print "Select year-month (%s)" % year_month
-        
+
         def click_month_list():
             xpath = "//div[contains(@title,'Månad')]"
             month_list = self.driver.find_elements_by_xpath_patiently(xpath)[1]
@@ -102,30 +102,30 @@ class AMS(object):
         month_list = patiently(click_month_list, IndexError, exception_to_raise=XPathError)
         #patiently(select_year_month, (ElementNotVisibleException, StaleElementReferenceException))
         patiently(click_year_month, (ElementNotVisibleException, StaleElementReferenceException))
-        
+
 
     def _select_youth_only(self):
         print "Select youth only"
         def select_youth_only():
             elem = self.driver.find_elements_by_xpath_patiently("//div[@title='18-24 år']")[-1]
             elem.click()
-        
+
         sleep(self.sleep)
         patiently(select_youth_only, NoSuchElementException)
-        
+
     def _select_foreign_only(self):
         print "Select foreign only"
         def select_foreign_only():
             elem = self.driver.find_elements_by_xpath_patiently("//div[@title='Utrikesfödda']")[-1]
             elem.click()
-        
+
         sleep(self.sleep)
         patiently(select_foreign_only, NoSuchElementException)
 
     def _download_file(self, xpath):
         print "Download file"
         d = self.driver
-        """ Downloads a file given an xpath to the download link 
+        """ Downloads a file given an xpath to the download link
         """
         file_list_before = os.listdir(self.download_dir)
 
@@ -133,7 +133,7 @@ class AMS(object):
         def download_file():
             export_btn = d.find_element_by_xpath_patiently(xpath)
             export_btn.click()
-        
+
 
         def get_filename():
             file_list_after = os.listdir(self.download_dir)
@@ -162,7 +162,7 @@ class AMS(object):
 
         # Select year-month
         if year and month:
-            self._select_year_month(year, month)    
+            self._select_year_month(year, month)
 
         if youth_only:
             self._select_youth_only()
@@ -183,7 +183,7 @@ class AMS(object):
             close_btn.click()
         except:
             pass
-        
+
         return data
 
     def _get_overview(self, year=None, month=None, youth_only=False, foreign_only=False):
@@ -198,7 +198,7 @@ class AMS(object):
 
         # Select year-month
         if year and month:
-            self._select_year_month(year, month)    
+            self._select_year_month(year, month)
 
         if youth_only:
             self._select_youth_only()
@@ -209,9 +209,9 @@ class AMS(object):
         def parse_downloaded():
             return data.parse_downloaded_file(downloaded_file)
 
-        # [1] = "Arbetssökande antal/andel av den registerbaserade arbetskraften"
-        # [2] = "Arbetssökande antal/andel av befolkningen"
-        xpath = "(//td[contains(text(),'Exportera till Excel')])[1]"
+        # [1] = "Arbetssökande antal/andel av befolkningen"
+        # [2] = "Arbetssökande antal/andel av den registerbaserade arbetskraften"
+        xpath = "(//td[contains(text(),'Exportera till Excel')])[2]"
         downloaded_file = self._download_file(xpath)
         data = patiently(parse_downloaded, IndexError)
         data.verify(year=year, month=month, youth_only=youth_only, foreign_only=foreign_only)
@@ -245,18 +245,18 @@ def merge_dicts(*dict_args):
 
 
 def make_patient(driver):
-    driver.find_element_by_xpath_patiently = types.MethodType( find_element_by_xpath_patiently, driver )        
-    driver.find_elements_by_xpath_patiently = types.MethodType( find_elements_by_xpath_patiently, driver )        
+    driver.find_element_by_xpath_patiently = types.MethodType( find_element_by_xpath_patiently, driver )
+    driver.find_elements_by_xpath_patiently = types.MethodType( find_elements_by_xpath_patiently, driver )
     return driver
 
 
 def find_element_by_xpath_patiently(self, xpath, seconds=5):
-    """ Attempts to find an element for n seconds. 
+    """ Attempts to find an element for n seconds.
     """
     attempts = 10
     i = 0
     print "Find %s" % xpath
-    while i < attempts: 
+    while i < attempts:
         try:
             return self.find_element_by_xpath(xpath)
         except NoSuchElementException:
@@ -269,7 +269,7 @@ def find_elements_by_xpath_patiently(self, xpath, seconds=4):
     attempts = 20
     i = 0
     print "Find %s" % xpath
-    while i < attempts: 
+    while i < attempts:
         try:
             return self.find_elements_by_xpath(xpath)
         except NoSuchElementException:
@@ -277,6 +277,3 @@ def find_elements_by_xpath_patiently(self, xpath, seconds=4):
             sleep( float(seconds) / float(attempts))
             i += 1
     raise NoSuchElementException(xpath)
-
-
-

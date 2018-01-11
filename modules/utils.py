@@ -13,20 +13,20 @@ def partition(alist, indices):
 def file_exists(filename):
     """ Check if a file exists
     """
-    return os.path.isfile(filename) 
+    return os.path.isfile(filename)
 
 
-def patiently(function, exception_to_catch, exception_to_raise=None, msg="", seconds=6):
-    """ Execute a function repetedly with a short sleep until it does not 
+def patiently(function, exception_to_catch, exception_to_raise=None, msg="", seconds=15):
+    """ Execute a function repetedly with a short sleep until it does not
         raise the error specified in the function.
         Used to handle async events on site.
     """
     if not exception_to_raise:
         exception_to_raise = exception_to_catch
-    attempts = 10
+    attempts = 15
     i = 0
     print "Execute function %s patiently" % function.__name__
-    while i < attempts: 
+    while i < attempts:
         try:
             return function()
         except exception_to_catch:
@@ -45,5 +45,3 @@ def merge_csv_files(filelist):
         data += list(reader)
 
     return data
-
-    
